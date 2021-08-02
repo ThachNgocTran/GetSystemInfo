@@ -6,6 +6,8 @@ using System.Management;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace GetSystemInfo
 {
@@ -13,13 +15,37 @@ namespace GetSystemInfo
     {
         static void Main(string[] args)
         {
-            Console.WriteLine(getCPU());
-            Console.WriteLine(getNetworkBandwith());
-            Console.WriteLine(getHarddrive());
-            Console.WriteLine(getOs());
-            Console.WriteLine(getMemory());
+            //Console.WriteLine(getCPU());
+            //Console.WriteLine(getNetworkBandwith());
+            //Console.WriteLine(getHarddrive());
+            //Console.WriteLine(getOs());
+            //Console.WriteLine(getMemory());
+            Console.WriteLine(getUsedAndAvailableMemory());
         }
 
+        /// <summary>
+        /// Get used memory of the current process, and the available memory in the system.
+        /// </summary>
+        /// <returns></returns>
+        public static string getUsedAndAvailableMemory()
+        {
+            StringBuilder strBuilder = new StringBuilder();
+            strBuilder.Append("UsedAndAvailableMemory:\n");
+
+            // https://stackoverflow.com/questions/1984186/what-is-private-bytes-virtual-bytes-working-set
+            Process proc = Process.GetCurrentProcess();
+            proc.Refresh();
+            var ramCounter = new PerformanceCounter("Memory", "Available MBytes", true);
+            var ram = ramCounter.NextValue();
+
+            // "PrivateMemorySize64" is a good approximate counter even though it doesn't contain memory from shared-DLLs.
+            strBuilder.Append(String.Format("PrivateMemorySize64 = {0} MB\n", Math.Round(proc.PrivateMemorySize64 / (double)(1024 * 1024), 1)));
+            //  
+            strBuilder.Append(String.Format("Available MBytes = {0} MB\n", Convert.ToInt32(ram)));
+
+            return strBuilder.ToString();
+        }
+        
         public static string getNetworkBandwith()
         {
             StringBuilder strBuilder = new StringBuilder();
